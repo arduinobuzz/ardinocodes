@@ -1,0 +1,106 @@
+#include <Keypad.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+const byte ROWS = 4;
+const byte COLS = 4;
+
+char keys[ROWS][COLS] = {
+  {'1','2','3','A'},
+  {'4','5','6','B'},
+  {'7','8','9','C'},
+  {'*','0','#','D'}
+};
+
+byte rowPins[ROWS] = {9, 8, 7, 6};
+byte colPins[COLS] = {5, 4, 3, 2};
+
+Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
+
+int buzzer = 10;
+
+char currentKey = NO_KEY;
+bool playingSong = false;
+
+// 🎵 Melody
+int melody[] = {262, 294, 330, 262, 262, 294, 330, 262};
+int duration[] = {300, 300, 300, 500, 300, 300, 300, 500};
+int notes = 8;
+
+int i = 0;  // index for looping
+
+void setup() {
+  lcd.init();
+  lcd.backlight();
+  lcd.print("Press Key:");
+}
+
+void loop() {
+
+  char key = keypad.getKey();
+
+  // 🎵 Start song
+  if (key == '#') {
+    playingSong = true;
+    lcd.clear();
+    lcd.print("Song Mode");
+  }
+
+  // 🛑 Stop song
+  if (key == '*') {
+    playingSong = false;
+    noTone(buzzer);
+    lcd.clear();
+    lcd.print("Stopped");
+    delay(500);
+    lcd.clear();
+    lcd.print("Press Key:");
+  }
+
+  // 🎵 SONG LOOP MODE
+  if (playingSong) {
+    tone(buzzer, melody[i]);
+    delay(duration[i]);
+    noTone(buzzer);
+    delay(100);
+
+    i++;
+    if (i >= notes) i = 0;  // loop again
+
+    return; // skip normal piano
+  }
+
+  // 🎹 NORMAL PIANO
+  if (key != NO_KEY) {
+    currentKey = key;
+
+    lcd.clear();
+    lcd.print("Key: ");
+    lcd.print(key);
+  }
+
+  switch(currentKey) {
+    case '1': tone(buzzer, 262); break;
+    case '2': tone(buzzer, 294); break;
+    case '3': tone(buzzer, 330); break;
+    case '4': tone(buzzer, 349); break;
+    case '5': tone(buzzer, 392); break;
+    case '6': tone(buzzer, 440); break;
+    case '7': tone(buzzer, 494); break;
+    case '8': tone(buzzer, 523); break;
+    case '9': tone(buzzer, 587); break;
+    case '0': tone(buzzer, 659); break;
+    case 'A': tone(buzzer, 698); break;
+    case 'B': tone(buzzer, 784); break;
+    case 'C': tone(buzzer, 880); break;
+    case 'D': tone(buzzer, 988); break;
+    default: noTone(buzzer); break;
+  }
+
+  if (keypad.getState() == IDLE) {
+    noTone(buzzer);
+    currentKey = NO_KEY;
+  }
+}
