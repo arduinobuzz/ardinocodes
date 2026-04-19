@@ -1,0 +1,107 @@
+int leds[] = {2, 3, 4, 5, 6};
+int buttonPin = 8;
+
+int mode = 0;
+
+// Button
+int lastReading = HIGH;
+int buttonState = HIGH;
+unsigned long lastDebounceTime = 0;
+unsigned long debounceDelay = 50;
+
+// Timing
+unsigned long previousMillis = 0;
+int interval = 150;
+
+// Pattern variables
+int index = 0;
+bool direction = true;
+bool blinkState = false;
+
+void setup() {
+  for (int i = 0; i < 5; i++) {
+    pinMode(leds[i], OUTPUT);
+  }
+  pinMode(buttonPin, INPUT_PULLUP);
+}
+
+void loop() {
+
+  // -------- BUTTON --------
+  int reading = digitalRead(buttonPin);
+
+  if (reading != lastReading) {
+    lastDebounceTime = millis();
+  }
+
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+    if (reading != buttonState) {
+      buttonState = reading;
+
+      if (buttonState == LOW) {
+        mode++;
+        if (mode > 4) mode = 0;
+
+        // Reset everything
+        index = 0;
+        direction = true;
+        blinkState = false;
+      }
+    }
+  }
+
+  lastReading = reading;
+
+  // -------- PATTERNS --------
+  unsigned long currentMillis = millis();
+
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
+
+    // Turn OFF all LEDs
+    for (int i = 0; i < 5; i++) digitalWrite(leds[i], LOW);
+
+    // 1. Forward
+    if (mode == 0) {
+      digitalWrite(leds[index], HIGH);
+      index = (index + 1) % 5;
+    }
+
+    // 2. Reverse
+    else if (mode == 1) {
+      digitalWrite(leds[index], HIGH);
+      index--;
+      if (index < 0) index = 4;
+    }
+
+    // 3. Blink All
+    else if (mode == 2) {
+      blinkState = !blinkState;
+      for (int i = 0; i < 5; i++) digitalWrite(leds[i], blinkState);
+    }
+
+    // 4. Ping-Pong
+    else if (mode == 3) {
+      digitalWrite(leds[index], HIGH);
+
+      if (direction) {
+        index++;
+        if (index == 4) direction = false;
+      } else {
+        index--;
+        if (index == 0) direction = true;
+      }
+    }
+
+    // 5. Alternate (CLEAR difference)
+    else if (mode == 4) {
+      blinkState = !blinkState;
+
+      for (int i = 0; i < 5; i++) {
+        if ((i % 2 == 0 && blinkState) || (i % 2 == 1 && !blinkState)) {
+          digitalWrite(leds[i], HIGH);
+        }
+      }
+    }
+  }
+}
