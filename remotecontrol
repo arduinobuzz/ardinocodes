@@ -1,0 +1,127 @@
+#include <IRremote.hpp>
+#include <Stepper.h>
+
+#define STEPS 2048
+
+Stepper stepper(STEPS, 3, 5, 4, 6);
+
+// Outputs
+int redLED = 8;
+int greenLED = 9;
+int buzzer = 10;
+
+// Stepper control
+bool motorRunning = false;
+int speedValue = 10;
+int direction = 1;
+
+// States
+bool redState = false;
+bool greenState = false;
+bool buzzerState = false;
+
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(redLED, OUTPUT);
+  pinMode(greenLED, OUTPUT);
+  pinMode(buzzer, OUTPUT);
+
+  // Stepper pins as output
+  pinMode(3, OUTPUT);
+  pinMode(4, OUTPUT);
+  pinMode(5, OUTPUT);
+  pinMode(6, OUTPUT);
+
+  stepper.setSpeed(speedValue);
+
+  IrReceiver.begin(2);
+}
+
+void loop() {
+
+  if (IrReceiver.decode()) {
+
+    int code = IrReceiver.decodedIRData.command;
+    Serial.println(code);
+
+    // 🔴 RED TOGGLE
+    if (code == your value) {
+      redState = !redState;
+    }
+
+    // 🟢 GREEN TOGGLE
+    else if (code == your value) {
+      greenState = !greenState;
+    }
+
+    // 🔊 BUZZER TOGGLE
+    else if (code == your value) {
+      buzzerState = !buzzerState;
+    }
+
+    // 🔄 MOTOR ON/OFF
+    else if (code == your value) {
+      motorRunning = !motorRunning;
+    }
+
+    // ➡️ RIGHT
+    else if (code == value) {
+      direction = 1;
+    }
+
+    // ⬅️ LEFT
+    else if (code == your value) {
+      direction = -1;
+    }
+
+    // ⚡ SPEED UP
+    else if (code == you value) {
+      speedValue += 2;
+      if (speedValue > 20) speedValue = 20;
+      stepper.setSpeed(speedValue);
+    }
+
+    // 🐢 SPEED DOWN
+    else if (code == your value) {
+      speedValue -= 2;
+      if (speedValue < 5) speedValue = 5;
+      stepper.setSpeed(speedValue);
+    }
+
+    // 🔥 ALL ON
+    else if (code == your value) {
+      redState = true;
+      greenState = true;
+      buzzerState = true;
+      motorRunning = true;
+      direction = 1;
+    }
+
+    // ⛔ ALL OFF
+    else if (code == your value) {
+      redState = false;
+      greenState = false;
+      buzzerState = false;
+      motorRunning = false;
+
+      // 🔴 Turn OFF stepper driver LEDs
+      digitalWrite(3, LOW);
+      digitalWrite(4, LOW);
+      digitalWrite(5, LOW);
+      digitalWrite(6, LOW);
+    }
+
+    IrReceiver.resume();
+  }
+
+  // ✅ Sync outputs
+  digitalWrite(redLED, redState);
+  digitalWrite(greenLED, greenState);
+  digitalWrite(buzzer, buzzerState);
+
+  // 🔄 RUN MOTOR
+  if (motorRunning) {
+    stepper.step(direction * 5);
+  }
+}
