@@ -1,0 +1,86 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include <Stepper.h>
+
+#define STEPS 2048
+
+Stepper stepper(STEPS, 8, 10, 9, 11);
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+int sensor = A0;
+
+int greenLED = 2;
+int orangeLED = 3;
+int redLED = 4;
+int buzzer = 5;
+
+void setup() {
+  pinMode(greenLED, OUTPUT);
+  pinMode(orangeLED, OUTPUT);
+  pinMode(redLED, OUTPUT);
+  pinMode(buzzer, OUTPUT);
+
+  lcd.init();
+  lcd.backlight();
+
+  stepper.setSpeed(15); // ✅ stable speed
+}
+
+void loop() {
+
+  int value = analogRead(sensor);
+
+  lcd.setCursor(0, 0);
+  lcd.print("Water Level:   ");
+
+  // ❌ NO WATER
+  if (value < 500) {
+    digitalWrite(greenLED, LOW);
+    digitalWrite(orangeLED, LOW);
+    digitalWrite(redLED, LOW);
+    digitalWrite(buzzer, LOW);
+
+    lcd.setCursor(0, 1);
+    lcd.print("NO WATER      ");
+  }
+
+  // 🟢 LOW → MOTOR RUN
+  else if (value < 540) {
+    digitalWrite(greenLED, HIGH);
+    digitalWrite(orangeLED, LOW);
+    digitalWrite(redLED, LOW);
+    digitalWrite(buzzer, LOW);
+
+    lcd.setCursor(0, 1);
+    lcd.print("LOW           ");
+
+    stepper.step(5); // ✅ small smooth steps
+  }
+
+  // 🟠 MEDIUM
+  else if (value < 600) {
+    digitalWrite(greenLED, LOW);
+    digitalWrite(orangeLED, HIGH);
+    digitalWrite(redLED, LOW);
+    digitalWrite(buzzer, LOW);
+
+    lcd.setCursor(0, 1);
+    lcd.print("MEDIUM        ");
+  }
+
+  // 🔴 FULL
+  else {
+    digitalWrite(greenLED, LOW);
+    digitalWrite(orangeLED, LOW);
+    digitalWrite(redLED, HIGH);
+
+    lcd.setCursor(0, 1);
+    lcd.print("TANK FULL!    ");
+
+    digitalWrite(buzzer, HIGH);
+    delay(200);
+    digitalWrite(buzzer, LOW);
+    delay(200);
+  }
+}
