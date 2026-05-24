@@ -1,0 +1,103 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+#define trigPin 9
+#define echoPin 10
+
+int greenLED = 2;
+int orangeLED = 3;
+int redLED = 4;
+int buzzer = 5;
+
+long duration;
+int distance;
+
+void setup() {
+
+  pinMode(trigPin, OUTPUT); 
+  pinMode(echoPin, INPUT);
+
+  pinMode(greenLED, OUTPUT);
+  pinMode(orangeLED, OUTPUT);
+  pinMode(redLED, OUTPUT);
+
+  pinMode(buzzer, OUTPUT);
+
+  lcd.init();
+  lcd.backlight();
+}
+
+void loop() {
+
+  // Ultrasonic reading
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+
+  digitalWrite(trigPin, LOW);
+
+  duration = pulseIn(echoPin, HIGH);
+
+  distance = duration * 0.034 / 2;
+
+  // LCD
+  lcd.setCursor(0, 0);
+  lcd.print("Distance: ");
+  lcd.print(distance);
+  lcd.print(" cm   ");
+
+  // 🟢 FAR
+  if (distance > 20) {
+
+    digitalWrite(greenLED, HIGH);
+    digitalWrite(orangeLED, LOW);
+    digitalWrite(redLED, LOW);
+
+    digitalWrite(buzzer, HIGH);
+    delay(500);
+
+    digitalWrite(buzzer, LOW);
+    delay(500);
+
+    lcd.setCursor(0, 1);
+    lcd.print("SAFE         ");
+  }
+
+  // 🟠 MEDIUM
+  else if (distance > 10) {
+
+    digitalWrite(greenLED, LOW);
+    digitalWrite(orangeLED, HIGH);
+    digitalWrite(redLED, LOW);
+
+    digitalWrite(buzzer, HIGH);
+    delay(200);
+
+    digitalWrite(buzzer, LOW);
+    delay(200);
+
+    lcd.setCursor(0, 1);
+    lcd.print("SLOW DOWN    ");
+  }
+
+  // 🔴 VERY CLOSE
+  else {
+
+    digitalWrite(greenLED, LOW);
+    digitalWrite(orangeLED, LOW);
+    digitalWrite(redLED, HIGH);
+
+    digitalWrite(buzzer, HIGH);
+    delay(60);
+
+    digitalWrite(buzzer, LOW);
+    delay(60);
+
+    lcd.setCursor(0, 1);
+    lcd.print("STOP!        ");
+  }
+}
