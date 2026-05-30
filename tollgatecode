@@ -1,0 +1,309 @@
+#include <Servo.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+Servo gateServo;
+
+LiquidCrystal_I2C lcd(0x27,16,2);
+
+
+// Pins
+
+int trigPin=11;
+int echoPin=12;
+int servoPin=13;
+int buzzer=8;
+
+
+// Variables
+
+long duration;
+int distance;
+
+int carCount=0;
+
+bool carDetected=false;
+
+
+
+void showWelcome(){
+
+lcd.clear();
+
+lcd.setCursor(
+0,
+0
+);
+
+lcd.print(
+"Welcome To"
+);
+
+lcd.setCursor(
+0,
+1
+);
+
+lcd.print(
+"Toll Gate"
+);
+
+}
+
+
+
+void setup(){
+
+
+// Servo
+
+gateServo.attach(
+servoPin
+);
+
+gateServo.write(
+90
+);
+
+
+
+// Ultrasonic
+
+pinMode(
+trigPin,
+OUTPUT
+);
+
+pinMode(
+echoPin,
+INPUT
+);
+
+
+
+// Buzzer
+
+pinMode(
+buzzer,
+OUTPUT
+);
+
+
+
+// LCD
+
+lcd.init();
+
+lcd.backlight();
+
+
+
+// Random
+
+randomSeed(
+analogRead(
+A0
+)
+);
+
+
+
+Serial.begin(
+9600
+);
+
+
+
+showWelcome();
+
+}
+
+
+
+void loop(){
+
+
+// Ultrasonic trigger
+
+digitalWrite(
+trigPin,
+LOW
+);
+
+delayMicroseconds(
+2
+);
+
+digitalWrite(
+trigPin,
+HIGH
+);
+
+delayMicroseconds(
+10
+);
+
+digitalWrite(
+trigPin,
+LOW
+);
+
+
+
+// Read distance
+
+duration=
+pulseIn(
+echoPin,
+HIGH
+);
+
+distance=
+duration*
+0.034/
+2;
+
+
+
+Serial.println(
+distance
+);
+
+
+
+
+// Car detected
+
+if(
+
+distance>0
+
+&&
+
+distance<25
+
+&&
+
+carDetected==false
+
+)
+
+{
+
+carDetected=true;
+
+carCount++;
+
+
+
+// Random tag
+
+int tag=
+random(
+1000,
+10000
+);
+
+
+
+// LCD
+
+lcd.clear();
+
+lcd.setCursor(
+0,
+0
+);
+
+lcd.print(
+"VALID TAG"
+);
+
+lcd.setCursor(
+6,
+1
+);
+
+lcd.print(
+tag
+);
+
+
+
+// Soft buzzer
+
+tone(
+buzzer,
+300
+);
+
+
+
+// Open gate
+
+gateServo.write(
+0
+);
+
+
+
+// Wait
+
+delay(
+3000
+);
+
+
+
+// Stop buzzer
+
+noTone(
+buzzer
+);
+
+}
+
+
+
+
+// Close gate
+
+if(
+
+distance>30
+
+&&
+
+carDetected==true
+
+)
+
+{
+
+carDetected=false;
+
+
+// Close servo
+
+gateServo.write(
+90
+);
+
+delay(
+1000
+);
+
+
+// Welcome screen
+
+showWelcome();
+
+}
+
+
+
+delay(
+200
+);
+
+}
