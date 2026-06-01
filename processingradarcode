@@ -1,0 +1,68 @@
+import processing.serial.*;
+
+Serial myPort;
+
+String data="";
+int angle=0;
+int distance=0;
+
+void setup(){
+  size(800,600);
+  myPort = new Serial(this,"COM3",9600);
+  myPort.bufferUntil('.');
+}
+
+void draw(){
+
+  background(0);
+  translate(width/2,height);
+
+  // RADAR GRID
+  stroke(0,255,0);
+  strokeWeight(2);
+  noFill();
+
+  arc(0,0,600,600,PI,TWO_PI);
+  arc(0,0,400,400,PI,TWO_PI);
+  arc(0,0,200,200,PI,TWO_PI);
+
+  // SWEEP LINE
+  stroke(0,255,0);
+  strokeWeight(3);
+  line(0,0,300*cos(radians(angle)),-300*sin(radians(angle)));
+
+  // RED DETECTION SECTOR
+  if(distance > 0 && distance < 30){
+
+    float r = 300;
+
+    fill(255,0,0,180);
+    noStroke();
+
+    triangle(
+      0,0,
+      r*cos(radians(angle-6)), -r*sin(radians(angle-6)),
+      r*cos(radians(angle+6)), -r*sin(radians(angle+6))
+    );
+  }
+
+  fill(255);
+  textSize(16);
+  text("Distance: "+distance+" cm", -350,-450);
+}
+
+void serialEvent(Serial myPort){
+
+  data = myPort.readStringUntil('.');
+
+  if(data != null){
+
+    data = trim(data);
+    int comma = data.indexOf(',');
+
+    if(comma > 0){
+      angle = int(data.substring(0,comma));
+      distance = int(data.substring(comma+1));
+    }
+  }
+}
